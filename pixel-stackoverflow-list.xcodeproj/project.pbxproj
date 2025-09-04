@@ -33,7 +33,7 @@
 		D89616972E69FE9200092F86 /* Exceptions for "pixel-stackoverflow-list" folder in "pixel-stackoverflow-list" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Resources/Info.plist,
+				Info.plist,
 			);
 			target = D896166E2E69FE9000092F86 /* pixel-stackoverflow-list */;
 		};
