@@ -17,3 +17,8 @@ class MainListViewController: UIViewController {
 
 }
 
+private extension MainListViewController {
+    func setup() {
+        self.view.backgroundColor = .systemBackground
+    }
+}
