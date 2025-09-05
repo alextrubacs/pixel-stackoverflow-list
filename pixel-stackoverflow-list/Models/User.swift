@@ -7,10 +7,6 @@
 
 import Foundation
 
-struct UsersResponse: Codable {
-    public let items: [User]
-}
-
 struct User: Codable {
     let accountId: Int?
     let reputation: Int
