@@ -15,7 +15,7 @@ protocol UserDecodingProtocol: Sendable {
     func decodeUsersResponse(from data: Data) throws -> [User]
 }
 
-actor UserFetchingService {
+final class UserFetchingService {
 
     // MARK: - Properties
     private let session: URLSession
