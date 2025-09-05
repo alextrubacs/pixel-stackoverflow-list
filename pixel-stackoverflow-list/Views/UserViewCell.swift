@@ -61,7 +61,7 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
 
         var config = UIButton.Configuration.tinted()
         config.title = "Follow"
-        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
         config.imagePlacement = .trailing
         config.imagePadding = 4
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
@@ -128,7 +128,7 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
             followButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             followButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             followButton.heightAnchor.constraint(equalToConstant: 32),
-            followButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 70)
+            followButton.widthAnchor.constraint(equalToConstant: 100)
         ])
     }
 
@@ -172,7 +172,7 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
             config.image = nil
         }
 
-        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
         config.imagePlacement = .trailing
         config.imagePadding = 4
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
