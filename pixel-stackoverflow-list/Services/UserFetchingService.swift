@@ -7,11 +7,15 @@
 
 import Foundation
 
-protocol UserFetchingProtocol {
+protocol UserFetchingProtocol: Sendable {
     func fetchUsers() async throws -> [User]
 }
 
-final class UserFetchingService: UserFetchingProtocol {
+protocol UserDecodingProtocol: Sendable {
+    func decodeUsersResponse(from data: Data) async throws -> [User]
+}
+
+actor UserFetchingService {
 
     // MARK: - Properties
     private let session: URLSession
@@ -20,8 +24,9 @@ final class UserFetchingService: UserFetchingProtocol {
     init(session: URLSession = .shared) {
         self.session = session
     }
+}
 
-    // MARK: - UserFetchingProtocol
+extension UserFetchingService: UserFetchingProtocol {
     func fetchUsers() async throws -> [User] {
         guard let url = APIConfiguration.usersURL() else {
             throw UserFetchingError.invalidURL("Failed to construct users API URL")
@@ -29,7 +34,7 @@ final class UserFetchingService: UserFetchingProtocol {
 
         do {
             let (data, response) = try await session.data(from: url)
-            return try handleNetworkResponse(data: data, response: response)
+            return try await handleNetworkResponse(data: data, response: response)
         } catch let networkError as URLError {
             throw UserFetchingError.networkError(networkError)
         } catch let userFetchingError as UserFetchingError {
@@ -40,7 +45,7 @@ final class UserFetchingService: UserFetchingProtocol {
     }
 
     // MARK: - Private Methods
-    private func handleNetworkResponse(data: Data, response: URLResponse) throws -> [User] {
+    private func handleNetworkResponse(data: Data, response: URLResponse) async throws -> [User] {
 
         if let jsonString = String(data: data, encoding: .utf8) {
             print("API Response: \(jsonString.prefix(500))...")
@@ -55,6 +60,12 @@ final class UserFetchingService: UserFetchingProtocol {
             throw UserFetchingError.noData
         }
 
+        return try await decodeUsersResponse(from: data)
+    }
+}
+
+extension UserFetchingService: UserDecodingProtocol {
+    func decodeUsersResponse(from data: Data) async throws -> [User] {
         let jsonDecoder = JSONDecoder()
         jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
 
