@@ -117,11 +117,12 @@ class UserCellViewModel {
                 try await followedUsersRepository.followUser(userID: user.userId)
                 print("Followed user: \(user.displayName)")
             }
-
-            delegate?.userCellViewModelDidUpdateFollowState(self)
-            followAction?()
         } catch {
             print("Error following/unfollowing user: \(error)")
         }
+
+        // Always notify delegate to update UI state, even on error
+        delegate?.userCellViewModelDidUpdateFollowState(self)
+        followAction?()
     }
 }
