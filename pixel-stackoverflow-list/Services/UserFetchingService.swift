@@ -15,7 +15,6 @@ final class UserFetchingService: UserFetchingProtocol {
 
     // MARK: - Properties
     private let session: URLSession
-    private let baseURL = "https://api.stackexchange.com/2.2"
 
     // MARK: - Initialization
     init(session: URLSession = .shared) {
@@ -24,8 +23,8 @@ final class UserFetchingService: UserFetchingProtocol {
 
     // MARK: - UserFetchingProtocol
     func fetchUsers() async throws -> [User] {
-        guard let url = URL(string: "\(baseURL)/users?page=1&pagesize=20&order=desc&sort=reputation&site=stackoverflow") else {
-            throw UserFetchingError.invalidURL("\(baseURL)/users?page=1&pagesize=20&order=desc&sort=reputation&site=stackoverflow")
+        guard let url = APIConfiguration.usersURL() else {
+            throw UserFetchingError.invalidURL("Failed to construct users API URL")
         }
 
         do {
