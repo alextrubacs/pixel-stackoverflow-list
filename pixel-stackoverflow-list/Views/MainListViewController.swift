@@ -11,22 +11,32 @@ final class MainListViewController: UIViewController {
     // MARK: - Properties
     private let viewModel = UserListViewModel()
 
+    // MARK: - Initialization
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(UserViewCell.self, forCellReuseIdentifier: CellIdentifier.userViewCell.rawValue)
-        tableView.dataSource = self
-        tableView.delegate = self
         tableView.tableFooterView = UIView()
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 80
         return tableView
     }()
 
+    private var dataSource: UITableViewDiffableDataSource<String, User>?
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
+        createDataSource()
         setupViewModel()
         loadUsers()
     }
@@ -47,9 +57,7 @@ private extension MainListViewController {
 
     func setupViewModel() {
         viewModel.onUsersUpdated = { [weak self] in
-            DispatchQueue.main.async {
-                self?.tableView.reloadData()
-            }
+            self?.loadUsersIntoDataSource()
         }
 
         viewModel.onError = { error in
@@ -65,19 +73,42 @@ private extension MainListViewController {
     }
 }
 
-extension MainListViewController: UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.numberOfUsers()
+// MARK: - Data Source
+private extension MainListViewController {
+    func createDataSource() {
+        dataSource = UITableViewDiffableDataSource<String, User>(
+            tableView: tableView
+        ) { [weak self] (tableView: UITableView, indexPath: IndexPath, user: User) in
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: CellIdentifier.userViewCell.rawValue,
+                for: indexPath
+            ) as? UserViewCell else {
+                return UITableViewCell()
+            }
+            
+            cell.imageLoader = { [weak self] url in
+                return try await self?.viewModel.downloadAndCacheImage(from: url) ?? UIImage()
+            }
+            cell.configure(with: user)
+
+            return cell
+        }
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.userViewCell.rawValue, for: indexPath) as? UserViewCell else {
-            return UITableViewCell()
-        }
+    func loadUsersIntoDataSource() {
+        let users = viewModel.allUsers
 
-        if let user = viewModel.getUser(at: indexPath.row) {
-            cell.configure(with: user)
-        }
-        return cell
+        var snapshot = NSDiffableDataSourceSnapshot<String, User>()
+        snapshot.appendSections(["users"])
+        snapshot.appendItems(users, toSection: "users")
+
+        dataSource?.apply(snapshot, animatingDifferences: false)
+    }
+}
+
+// MARK: - UserListViewModel Extension
+private extension UserListViewModel {
+    var allUsers: [User] {
+        users
     }
 }
