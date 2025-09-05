@@ -14,7 +14,6 @@ struct UsersResponse: Codable {
 struct User: Codable {
     let accountId: Int?
     let reputation: Int
-    let userType: String
     let userId: Int
     let location: String?
     let profileImage: URL?
@@ -23,7 +22,6 @@ struct User: Codable {
     enum CodingKeys: String, CodingKey {
         case accountId = "account_id"
         case reputation
-        case userType = "user_type"
         case userId = "user_id"
         case location
         case profileImage = "profile_image"

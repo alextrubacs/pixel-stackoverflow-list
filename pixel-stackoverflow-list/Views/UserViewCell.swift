@@ -40,14 +40,6 @@ class UserViewCell: UITableViewCell {
         return label
     }()
 
-    private let userTypeLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .preferredFont(forTextStyle: .caption1)
-        label.adjustsFontForContentSizeCategory = true
-        label.textColor = .tertiaryLabel
-        return label
-    }()
 
     private let locationLabel: UILabel = {
         let label = UILabel()
@@ -75,7 +67,6 @@ class UserViewCell: UITableViewCell {
         contentView.addSubview(avatarImageView)
         contentView.addSubview(displayNameLabel)
         contentView.addSubview(reputationLabel)
-        contentView.addSubview(userTypeLabel)
         contentView.addSubview(locationLabel)
 
         setupConstraints()
@@ -99,14 +90,9 @@ class UserViewCell: UITableViewCell {
             reputationLabel.topAnchor.constraint(equalTo: displayNameLabel.bottomAnchor, constant: 4),
             reputationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-            // User type label
-            userTypeLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
-            userTypeLabel.topAnchor.constraint(equalTo: reputationLabel.bottomAnchor, constant: 2),
-            userTypeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-
             // Location label
             locationLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
-            locationLabel.topAnchor.constraint(equalTo: userTypeLabel.bottomAnchor, constant: 2),
+            locationLabel.topAnchor.constraint(equalTo: reputationLabel.bottomAnchor, constant: 2),
             locationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             locationLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
         ])
@@ -122,7 +108,6 @@ class UserViewCell: UITableViewCell {
         avatarImageView.image = nil
         displayNameLabel.text = nil
         reputationLabel.text = nil
-        userTypeLabel.text = nil
         locationLabel.text = nil
     }
 
@@ -130,12 +115,11 @@ class UserViewCell: UITableViewCell {
     func configure(with user: User) {
         displayNameLabel.text = user.displayName
         reputationLabel.text = "Reputation: \(user.reputation)"
-        userTypeLabel.text = user.userType.capitalized
         locationLabel.text = user.location ?? "Location not available"
 
         // Load avatar image if available
         if user.profileImage != nil {
-            // TODO: Load the profile image 
+            // TODO: Load the profile image
             avatarImageView.backgroundColor = .systemBlue
         } else {
             avatarImageView.backgroundColor = .secondarySystemFill
