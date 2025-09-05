@@ -17,6 +17,13 @@ final class UserListViewModel {
         }
     }
 
+    // MARK: - Test Helpers
+    #if DEBUG
+    func setUsersForTesting(_ users: [User]) {
+        self.users = users
+    }
+    #endif
+
     private(set) var isLoading = false {
         didSet {
             onLoadingStateChanged?(isLoading)
@@ -65,6 +72,10 @@ extension UserListViewModel {
 
     func numberOfUsers() -> Int {
         return users.count
+    }
+
+    var isEmpty: Bool {
+        return users.isEmpty
     }
 }
 
