@@ -157,7 +157,7 @@ struct UserListViewModelTests {
         let sut = makeSUT(imageLoader: mockImageLoader)
         let testURL = URL(string: "https://example.com/image.jpg")!
 
-        let image = try await sut.downloadAndCacheImage(from: testURL)
+        _ = try await sut.downloadAndCacheImage(from: testURL)
 
         #expect(mockImageLoader.downloadImageDataCalled)
         #expect(mockImageLoader.lastDownloadedURL == testURL)
