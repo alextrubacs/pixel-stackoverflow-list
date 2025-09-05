@@ -8,6 +8,9 @@
 import UIKit
 
 final class MainListViewController: UIViewController {
+    // MARK: - Properties
+    private let viewModel = UserListViewModel()
+
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -20,13 +23,13 @@ final class MainListViewController: UIViewController {
         return tableView
     }()
 
-
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
+        setupViewModel()
+        loadUsers()
     }
-
-
 }
 
 private extension MainListViewController {
@@ -41,11 +44,30 @@ private extension MainListViewController {
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
     }
+
+    func setupViewModel() {
+        viewModel.onUsersUpdated = { [weak self] in
+            DispatchQueue.main.async {
+                self?.tableView.reloadData()
+            }
+        }
+
+        viewModel.onError = { error in
+            DispatchQueue.main.async {
+                print("Error loading users: \(error.localizedDescription)")
+                // TODO: Show error UI
+            }
+        }
+    }
+
+    func loadUsers() {
+        viewModel.getUsers()
+    }
 }
 
 extension MainListViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return MockDataProvider.shared.mockUsers.count
+        return viewModel.numberOfUsers()
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -53,8 +75,9 @@ extension MainListViewController: UITableViewDelegate, UITableViewDataSource {
             return UITableViewCell()
         }
 
-        let user = MockDataProvider.shared.mockUsers[indexPath.row]
-        cell.configure(with: user)
+        if let user = viewModel.getUser(at: indexPath.row) {
+            cell.configure(with: user)
+        }
         return cell
     }
 }
