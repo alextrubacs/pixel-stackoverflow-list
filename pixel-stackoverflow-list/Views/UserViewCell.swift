@@ -54,6 +54,23 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
         return label
     }()
 
+    private let followButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+
+        var config = UIButton.Configuration.plain()
+        config.title = "Follow"
+        config.baseForegroundColor = .systemBlue
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        button.configuration = config
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.systemBlue.cgColor
+        button.layer.cornerRadius = 12
+
+        return button
+    }()
+
     // MARK: - Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -71,6 +88,9 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
         contentView.addSubview(displayNameLabel)
         contentView.addSubview(reputationLabel)
         contentView.addSubview(locationLabel)
+        contentView.addSubview(followButton)
+
+        followButton.addTarget(self, action: #selector(followButtonTapped), for: .touchUpInside)
 
         setupConstraints()
     }
@@ -86,18 +106,23 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
             // Display name label
             displayNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
             displayNameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            displayNameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            displayNameLabel.trailingAnchor.constraint(equalTo: followButton.leadingAnchor, constant: -12),
 
             // Reputation label
             reputationLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
             reputationLabel.topAnchor.constraint(equalTo: displayNameLabel.bottomAnchor, constant: 4),
-            reputationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            reputationLabel.trailingAnchor.constraint(equalTo: followButton.leadingAnchor, constant: -12),
 
             // Location label
             locationLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
             locationLabel.topAnchor.constraint(equalTo: reputationLabel.bottomAnchor, constant: 2),
-            locationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            locationLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+            locationLabel.trailingAnchor.constraint(equalTo: followButton.leadingAnchor, constant: -12),
+            locationLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+
+            // Follow button
+            followButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            followButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            followButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 80)
         ])
     }
 
@@ -117,9 +142,14 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
         viewModel = nil
     }
 
+    // MARK: - Actions
+    @objc private func followButtonTapped() {
+        viewModel?.followUser()
+    }
+
     // MARK: - Configuration
-    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?) {
-        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader)
+    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil) {
+        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader, followAction: followAction)
         viewModel?.delegate = self
 
         displayNameLabel.text = viewModel?.displayName
@@ -150,5 +180,9 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error) {
         avatarImageView.image = nil
         avatarImageView.backgroundColor = .secondarySystemFill
+    }
+
+    func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel) {
+        // Follow action is handled in the ViewModel
     }
 }
