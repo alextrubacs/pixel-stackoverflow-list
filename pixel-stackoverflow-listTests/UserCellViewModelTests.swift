@@ -328,6 +328,21 @@ struct UserCellViewModelTests {
         #expect(!mockRepository.mockFollowedUsers.contains(testUser.userId)) // User should not be followed
     }
 
+    @Test("UserListViewModel reports empty state correctly")
+    func testEmptyState() {
+        // Given
+        let viewModel = UserListViewModel()
+
+        // Initially should not be empty (MockDataProvider provides data)
+        #expect(!viewModel.isEmpty)
+
+        // When we clear the users array (simulate no data)
+        viewModel.setUsersForTesting([])
+
+        // Then should report as empty
+        #expect(viewModel.isEmpty)
+    }
+
     @Test("Follow button title shows correct state")
     func testFollowButtonTitle() async {
         // Given
