@@ -11,15 +11,15 @@ final class MainListViewController: UIViewController {
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: CellIdentifier.userViewCell.rawValue)
+        tableView.register(UserViewCell.self, forCellReuseIdentifier: CellIdentifier.userViewCell.rawValue)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.tableFooterView = UIView()
         tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 80
         return tableView
     }()
-    
-    
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,14 +45,16 @@ private extension MainListViewController {
 
 extension MainListViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10
+        return MockDataProvider.shared.mockUsers.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.userViewCell.rawValue, for: indexPath)
-        var content = cell.defaultContentConfiguration()
-        content.text = "\(indexPath.row)"
-        cell.contentConfiguration = content
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.userViewCell.rawValue, for: indexPath) as? UserViewCell else {
+            return UITableViewCell()
+        }
+
+        let user = MockDataProvider.shared.mockUsers[indexPath.row]
+        cell.configure(with: user)
         return cell
     }
 }
