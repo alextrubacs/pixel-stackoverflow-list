@@ -8,6 +8,13 @@
 import SwiftData
 import Foundation
 
+protocol FollowedUsersRepositoryProtocol {
+    func followUser(userID: Int) async throws
+    func unfollowUser(userID: Int) async throws
+    func isUserFollowed(userID: Int) async throws -> Bool
+    func getAllFollowedUserIDs() async throws -> [Int]
+}
+
 final class FollowedUsersRepository: FollowedUsersRepositoryProtocol {
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
