@@ -150,25 +150,31 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
 
     // MARK: - Actions
     @objc private func followButtonTapped() {
-        viewModel?.followUser()
+        Task {
+            await viewModel?.followUser()
+        }
     }
 
     // MARK: - Private Methods
-    private func updateFollowButton() {
+    private func updateFollowButton() async {
         guard let viewModel = viewModel else { return }
+
+        let isFollowed = await viewModel.isFollowed
+        let title = await viewModel.followButtonTitle
+        let imageName = await viewModel.followButtonImage
 
         var config: UIButton.Configuration
 
-        if viewModel.isFollowed {
+        if isFollowed {
             config = UIButton.Configuration.filled()
-            config.title = viewModel.followButtonTitle
-            if let imageName = viewModel.followButtonImage {
+            config.title = title
+            if let imageName = imageName {
                 let symbolConfig = UIImage.SymbolConfiguration(font: .preferredFont(forTextStyle: .caption1))
                 config.image = UIImage(systemName: imageName, withConfiguration: symbolConfig)
             }
         } else {
             config = UIButton.Configuration.tinted()
-            config.title = viewModel.followButtonTitle
+            config.title = title
             config.image = nil
         }
 
@@ -186,15 +192,17 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
     }
 
     // MARK: - Configuration
-    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?) {
-        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader)
+    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?, followedUsersRepository: FollowedUsersRepositoryProtocol) {
+        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader, followedUsersRepository: followedUsersRepository)
         viewModel?.delegate = self
 
         displayNameLabel.text = viewModel?.displayName
         reputationLabel.text = viewModel?.reputationText
         locationLabel.text = viewModel?.locationText
 
-        updateFollowButton()
+        Task {
+            await updateFollowButton()
+        }
 
         if viewModel?.profileImageURL != nil {
             avatarImageView.image = nil
@@ -222,11 +230,9 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
         avatarImageView.backgroundColor = .secondarySystemFill
     }
 
-    func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel) {
-        // Follow action is handled in the ViewModel
-    }
-
     func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel) {
-        updateFollowButton()
+        Task {
+            await updateFollowButton()
+        }
     }
 }
