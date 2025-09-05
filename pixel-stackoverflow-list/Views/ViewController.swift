@@ -11,7 +11,7 @@ final class MainListViewController: UIViewController {
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: CellIdentifier.userViewCell.rawValue)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.tableFooterView = UIView()
@@ -31,7 +31,6 @@ final class MainListViewController: UIViewController {
 
 private extension MainListViewController {
     func setup() {
-
         view.backgroundColor = .systemBackground
         view.addSubview(tableView)
 
@@ -50,7 +49,7 @@ extension MainListViewController: UITableViewDelegate, UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: CellIdentifier.userViewCell.rawValue, for: indexPath)
         var content = cell.defaultContentConfiguration()
         content.text = "\(indexPath.row)"
         cell.contentConfiguration = content
