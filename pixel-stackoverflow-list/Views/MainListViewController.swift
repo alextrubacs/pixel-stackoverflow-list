@@ -31,6 +31,7 @@ final class MainListViewController: UIViewController {
     }()
 
     private var dataSource: UITableViewDiffableDataSource<String, User>?
+    private var currentError: Error?
 
     private lazy var emptyStateView: UIView = {
         let containerView = UIView()
@@ -48,10 +49,16 @@ final class MainListViewController: UIViewController {
         loadingIndicator.hidesWhenStopped = true
         loadingIndicator.color = .secondaryLabel
 
-        // Icon for no users
+        // Icon for no users / error
         let imageView = UIImageView(image: UIImage(systemName: "person.2.slash"))
         imageView.tintColor = .secondaryLabel
         imageView.contentMode = .scaleAspectFit
+
+        // Retry button for error state
+        let retryButton = UIButton(type: .system)
+        retryButton.setTitle("Retry", for: .normal)
+        retryButton.addTarget(self, action: #selector(retryButtonTapped), for: .touchUpInside)
+        retryButton.translatesAutoresizingMaskIntoConstraints = false
 
         let titleLabel = UILabel()
         titleLabel.font = .preferredFont(forTextStyle: .headline)
@@ -69,9 +76,12 @@ final class MainListViewController: UIViewController {
         stackView.addArrangedSubview(imageView)
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(subtitleLabel)
+        stackView.addArrangedSubview(retryButton)
 
-        // Hide imageView initially (shown only when no users)
+        // Hide imageView, loadingIndicator, and retryButton initially
         imageView.isHidden = true
+        loadingIndicator.isHidden = true
+        retryButton.isHidden = true
 
         containerView.addSubview(stackView)
 
@@ -94,6 +104,7 @@ final class MainListViewController: UIViewController {
             imageView.tag = 1002
             titleLabel.tag = 1003
             subtitleLabel.tag = 1004
+            retryButton.tag = 1005
         }
 
         return containerView
@@ -139,10 +150,11 @@ private extension MainListViewController {
             }
         }
 
-        viewModel.onError = { error in
+        viewModel.onError = { [weak self] error in
             DispatchQueue.main.async {
                 print("Error loading users: \(error.localizedDescription)")
-                // TODO: Show error UI
+                self?.currentError = error
+                self?.updateEmptyState()
             }
         }
     }
@@ -188,6 +200,9 @@ private extension MainListViewController {
 
         dataSource?.apply(snapshot, animatingDifferences: false)
 
+        // Clear any previous error when users are successfully loaded
+        currentError = nil
+
         // Update empty state visibility
         updateEmptyState()
     }
@@ -197,12 +212,14 @@ private extension MainListViewController {
               let loadingIndicator = emptyStateView.viewWithTag(1001) as? UIActivityIndicatorView,
               let imageView = emptyStateView.viewWithTag(1002) as? UIImageView,
               let titleLabel = emptyStateView.viewWithTag(1003) as? UILabel,
-              let subtitleLabel = emptyStateView.viewWithTag(1004) as? UILabel else {
+              let subtitleLabel = emptyStateView.viewWithTag(1004) as? UILabel,
+              let retryButton = emptyStateView.viewWithTag(1005) as? UIButton else {
             return
         }
 
         let isLoading = viewModel.isLoading
         let hasUsers = !viewModel.isEmpty
+        let hasError = currentError != nil
 
         if isLoading {
             // Show loading state
@@ -212,9 +229,31 @@ private extension MainListViewController {
             loadingIndicator.startAnimating()
             loadingIndicator.isHidden = false
             imageView.isHidden = true
+            retryButton.isHidden = true
 
             titleLabel.text = "Loading Users"
             subtitleLabel.text = "Please wait while we fetch the latest data."
+
+        } else if hasError {
+            // Show error state
+            emptyStateView.isHidden = false
+            tableView.isHidden = true
+
+            loadingIndicator.stopAnimating()
+            loadingIndicator.isHidden = true
+            imageView.isHidden = false
+            retryButton.isHidden = false
+
+            // Change icon to error icon
+            imageView.image = UIImage(systemName: "exclamationmark.triangle")
+            imageView.tintColor = .systemOrange
+
+            titleLabel.text = "Connection Error"
+            if let error = currentError {
+                subtitleLabel.text = error.localizedDescription
+            } else {
+                subtitleLabel.text = "Unable to load users. Please check your connection and try again."
+            }
 
         } else if hasUsers {
             // Hide empty state when we have users
@@ -233,10 +272,21 @@ private extension MainListViewController {
             loadingIndicator.stopAnimating()
             loadingIndicator.isHidden = true
             imageView.isHidden = false
+            retryButton.isHidden = true
+
+            // Reset to default icon
+            imageView.image = UIImage(systemName: "person.2.slash")
+            imageView.tintColor = .secondaryLabel
 
             titleLabel.text = "No Users Found"
             subtitleLabel.text = "There are no users to display at the moment."
         }
+    }
+
+    @objc private func retryButtonTapped() {
+        // Clear the current error and retry loading users
+        currentError = nil
+        loadUsers()
     }
 }
 
