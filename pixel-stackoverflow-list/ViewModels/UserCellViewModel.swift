@@ -11,6 +11,7 @@ protocol UserCellViewModelDelegate: AnyObject {
     func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?)
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error)
     func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel)
+    func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel)
 }
 
 class UserCellViewModel {
@@ -19,6 +20,7 @@ class UserCellViewModel {
     private let imageLoader: ((URL) async throws -> UIImage)?
     private let followAction: (() -> Void)?
     private var currentImageURL: URL?
+    private var _isFollowed: Bool
 
     weak var delegate: UserCellViewModelDelegate?
 
@@ -39,11 +41,24 @@ class UserCellViewModel {
         user.profileImage
     }
 
+    var isFollowed: Bool {
+        _isFollowed
+    }
+
+    var followButtonTitle: String {
+        isFollowed ? "Following" : "Follow"
+    }
+
+    var followButtonImage: String? {
+        isFollowed ? "checkmark.circle.fill" : nil
+    }
+
     // MARK: - Initialization
     init(user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil) {
         self.user = user
         self.imageLoader = imageLoader
         self.followAction = followAction
+        self._isFollowed = user.isFollowed
     }
 
     // MARK: - Public Methods
@@ -82,8 +97,10 @@ class UserCellViewModel {
     }
 
     func followUser() {
-        print("Follow action executed for user: \(user.displayName)")
+        _isFollowed.toggle()
+        print("\(isFollowed ? "Followed" : "Unfollowed") user: \(user.displayName)")
         delegate?.userCellViewModelDidTapFollow(self)
+        delegate?.userCellViewModelDidUpdateFollowState(self)
         followAction?()
     }
 }
