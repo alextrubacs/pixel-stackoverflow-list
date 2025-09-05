@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 protocol UserFetchingProtocol: Sendable {
     func fetchUsers() async throws -> [User]
@@ -13,6 +14,10 @@ protocol UserFetchingProtocol: Sendable {
 
 protocol UserDecodingProtocol: Sendable {
     func decodeUsersResponse(from data: Data) throws -> [User]
+}
+
+protocol ImageLoader {
+    func downloadImageData(from url: URL) async throws -> Data
 }
 
 final class UserFetchingService {
@@ -75,5 +80,18 @@ extension UserFetchingService: UserDecodingProtocol {
         } catch {
             throw UserFetchingError.decodingError(error)
         }
+    }
+}
+
+extension UserFetchingService: ImageLoader {
+    func downloadImageData(from url: URL) async throws -> Data {
+        let (data, response) = try await session.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw UserFetchingError.invalidResponse
+        }
+
+        return data
     }
 }

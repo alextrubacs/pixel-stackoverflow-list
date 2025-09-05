@@ -7,8 +7,11 @@
 
 import UIKit
 
-class UserViewCell: UITableViewCell {
+class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
     static var reuseIdentifier: String { CellIdentifier.userViewCell.rawValue }
+
+    // MARK: - Dependencies
+    private var viewModel: UserCellViewModel?
 
     // MARK: - Subviews
     private let avatarImageView: UIImageView = {
@@ -109,20 +112,43 @@ class UserViewCell: UITableViewCell {
         displayNameLabel.text = nil
         reputationLabel.text = nil
         locationLabel.text = nil
+        viewModel?.cancelImageLoading()
+        viewModel?.delegate = nil
+        viewModel = nil
     }
 
     // MARK: - Configuration
-    func configure(with user: User) {
-        displayNameLabel.text = user.displayName
-        reputationLabel.text = "Reputation: \(user.reputation)"
-        locationLabel.text = user.location ?? "Location not available"
+    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?) {
+        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader)
+        viewModel?.delegate = self
 
-        // Load avatar image if available
-        if user.profileImage != nil {
-            // TODO: Load the profile image
+        displayNameLabel.text = viewModel?.displayName
+        reputationLabel.text = viewModel?.reputationText
+        locationLabel.text = viewModel?.locationText
+
+        if viewModel?.profileImageURL != nil {
+            avatarImageView.image = nil
             avatarImageView.backgroundColor = .systemBlue
+            viewModel?.loadAvatarImage()
         } else {
+            avatarImageView.image = nil
             avatarImageView.backgroundColor = .secondarySystemFill
         }
+    }
+
+    // MARK: - UserCellViewModelDelegate
+    func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?) {
+        if let image = image {
+            avatarImageView.image = image
+            avatarImageView.backgroundColor = .clear
+        } else {
+            avatarImageView.image = nil
+            avatarImageView.backgroundColor = .secondarySystemFill
+        }
+    }
+
+    func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error) {
+        avatarImageView.image = nil
+        avatarImageView.backgroundColor = .secondarySystemFill
     }
 }
