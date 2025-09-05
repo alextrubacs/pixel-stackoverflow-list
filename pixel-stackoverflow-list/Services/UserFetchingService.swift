@@ -12,7 +12,7 @@ protocol UserFetchingProtocol: Sendable {
 }
 
 protocol UserDecodingProtocol: Sendable {
-    func decodeUsersResponse(from data: Data) async throws -> [User]
+    func decodeUsersResponse(from data: Data) throws -> [User]
 }
 
 actor UserFetchingService {
@@ -34,7 +34,7 @@ extension UserFetchingService: UserFetchingProtocol {
 
         do {
             let (data, response) = try await session.data(from: url)
-            return try await handleNetworkResponse(data: data, response: response)
+            return try handleNetworkResponse(data: data, response: response)
         } catch let networkError as URLError {
             throw UserFetchingError.networkError(networkError)
         } catch let userFetchingError as UserFetchingError {
@@ -45,7 +45,7 @@ extension UserFetchingService: UserFetchingProtocol {
     }
 
     // MARK: - Private Methods
-    private func handleNetworkResponse(data: Data, response: URLResponse) async throws -> [User] {
+    private func handleNetworkResponse(data: Data, response: URLResponse) throws -> [User] {
 
         if let jsonString = String(data: data, encoding: .utf8) {
             print("API Response: \(jsonString.prefix(500))...")
@@ -60,12 +60,12 @@ extension UserFetchingService: UserFetchingProtocol {
             throw UserFetchingError.noData
         }
 
-        return try await decodeUsersResponse(from: data)
+        return try decodeUsersResponse(from: data)
     }
 }
 
 extension UserFetchingService: UserDecodingProtocol {
-    func decodeUsersResponse(from data: Data) async throws -> [User] {
+    nonisolated func decodeUsersResponse(from data: Data) throws -> [User] {
         let jsonDecoder = JSONDecoder()
         jsonDecoder.keyDecodingStrategy = .convertFromSnakeCase
 
