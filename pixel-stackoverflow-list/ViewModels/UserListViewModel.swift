@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class UserListViewModel {
+final class UserListViewModel {
 
     // MARK: - Properties
     private(set) var users: [User] = [] {
