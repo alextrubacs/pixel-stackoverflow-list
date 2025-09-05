@@ -19,8 +19,8 @@ class UserCellViewModel {
     private let user: User
     private let imageLoader: ((URL) async throws -> UIImage)?
     private let followAction: (() -> Void)?
+    private let followedUsersRepository: FollowedUsersRepositoryProtocol
     private var currentImageURL: URL?
-    private var _isFollowed: Bool
 
     weak var delegate: UserCellViewModelDelegate?
 
@@ -42,23 +42,34 @@ class UserCellViewModel {
     }
 
     var isFollowed: Bool {
-        _isFollowed
+        get async {
+            do {
+                return try await followedUsersRepository.isUserFollowed(userID: user.userId)
+            } catch {
+                print("Error checking if user is followed: \(error)")
+                return false
+            }
+        }
     }
 
     var followButtonTitle: String {
-        isFollowed ? "Following" : "Follow"
+        get async {
+            await isFollowed ? "Following" : "Follow"
+        }
     }
 
     var followButtonImage: String? {
-        isFollowed ? "checkmark.circle.fill" : nil
+        get async {
+            await isFollowed ? "checkmark.circle.fill" : nil
+        }
     }
 
     // MARK: - Initialization
-    init(user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil) {
+    init(user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil, followedUsersRepository: FollowedUsersRepositoryProtocol) {
         self.user = user
         self.imageLoader = imageLoader
         self.followAction = followAction
-        self._isFollowed = user.isFollowed
+        self.followedUsersRepository = followedUsersRepository
     }
 
     // MARK: - Public Methods
@@ -96,11 +107,23 @@ class UserCellViewModel {
         currentImageURL = nil
     }
 
-    func followUser() {
-        _isFollowed.toggle()
-        print("\(isFollowed ? "Followed" : "Unfollowed") user: \(user.displayName)")
-        delegate?.userCellViewModelDidTapFollow(self)
-        delegate?.userCellViewModelDidUpdateFollowState(self)
-        followAction?()
+    func followUser() async {
+        do {
+            let currentlyFollowed = try await followedUsersRepository.isUserFollowed(userID: user.userId)
+
+            if currentlyFollowed {
+                try await followedUsersRepository.unfollowUser(userID: user.userId)
+                print("Unfollowed user: \(user.displayName)")
+            } else {
+                try await followedUsersRepository.followUser(userID: user.userId)
+                print("Followed user: \(user.displayName)")
+            }
+
+            delegate?.userCellViewModelDidTapFollow(self)
+            delegate?.userCellViewModelDidUpdateFollowState(self)
+            followAction?()
+        } catch {
+            print("Error following/unfollowing user: \(error)")
+        }
     }
 }
