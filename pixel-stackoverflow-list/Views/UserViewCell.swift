@@ -7,7 +7,7 @@
 
 import UIKit
 
-class UserViewCell: UICollectionViewCell {
+class UserViewCell: UITableViewCell {
     static var reuseIdentifier: String { CellIdentifier.userViewCell.rawValue }
 
     // MARK: - Subviews
@@ -60,27 +60,85 @@ class UserViewCell: UICollectionViewCell {
     }()
 
     // MARK: - Init
-    override init(frame: CGRect) {
-            super.init(frame: frame)
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupViews()
+    }
 
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupViews()
+    }
+
+    // MARK: - Setup
+    private func setupViews() {
+        contentView.addSubview(avatarImageView)
+        contentView.addSubview(displayNameLabel)
+        contentView.addSubview(reputationLabel)
+        contentView.addSubview(userTypeLabel)
+        contentView.addSubview(locationLabel)
+
+        setupConstraints()
+    }
+
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            // Avatar image
+            avatarImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            avatarImageView.widthAnchor.constraint(equalToConstant: 48),
+            avatarImageView.heightAnchor.constraint(equalToConstant: 48),
+
+            // Display name label
+            displayNameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
+            displayNameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            displayNameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            // Reputation label
+            reputationLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
+            reputationLabel.topAnchor.constraint(equalTo: displayNameLabel.bottomAnchor, constant: 4),
+            reputationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            // User type label
+            userTypeLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
+            userTypeLabel.topAnchor.constraint(equalTo: reputationLabel.bottomAnchor, constant: 2),
+            userTypeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+
+            // Location label
+            locationLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 12),
+            locationLabel.topAnchor.constraint(equalTo: userTypeLabel.bottomAnchor, constant: 2),
+            locationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            locationLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+        ])
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        avatarImageView.layer.cornerRadius = 12
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        avatarImageView.image = nil
+        displayNameLabel.text = nil
+        reputationLabel.text = nil
+        userTypeLabel.text = nil
+        locationLabel.text = nil
+    }
+
+    // MARK: - Configuration
+    func configure(with user: User) {
+        displayNameLabel.text = user.displayName
+        reputationLabel.text = "Reputation: \(user.reputation)"
+        userTypeLabel.text = user.userType.capitalized
+        locationLabel.text = user.location ?? "Location not available"
+
+        // Load avatar image if available
+        if user.profileImage != nil {
+            // TODO: Load the profile image 
+            avatarImageView.backgroundColor = .systemBlue
+        } else {
+            avatarImageView.backgroundColor = .secondarySystemFill
         }
-
-        required init?(coder: NSCoder) {
-            super.init(coder: coder)
-
-        }
-
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            avatarImageView.layer.cornerRadius = 12
-        }
-
-        override func prepareForReuse() {
-            super.prepareForReuse()
-            avatarImageView.image = nil
-            displayNameLabel.text = nil
-            reputationLabel.text = nil
-            userTypeLabel.text = nil
-            locationLabel.text = nil
-        }
+    }
 }
