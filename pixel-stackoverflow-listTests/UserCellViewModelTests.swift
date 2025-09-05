@@ -13,8 +13,11 @@ import UIKit
 class MockUserCellViewModelDelegate: UserCellViewModelDelegate {
     var didUpdateImageCalled = false
     var didFailWithErrorCalled = false
+    var didTapFollowCalled = false
+    var didUpdateFollowStateCalled = false
     var lastUpdatedImage: UIImage?
     var lastError: Error?
+    var lastFollowViewModel: UserCellViewModel?
 
     func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?) {
         didUpdateImageCalled = true
@@ -24,6 +27,16 @@ class MockUserCellViewModelDelegate: UserCellViewModelDelegate {
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error) {
         didFailWithErrorCalled = true
         lastError = error
+    }
+
+    func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel) {
+        didTapFollowCalled = true
+        lastFollowViewModel = viewModel
+    }
+
+    func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel) {
+        didUpdateFollowStateCalled = true
+        lastFollowViewModel = viewModel
     }
 }
 
