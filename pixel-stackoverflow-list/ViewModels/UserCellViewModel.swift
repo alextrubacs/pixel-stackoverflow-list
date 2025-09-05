@@ -10,7 +10,6 @@ import UIKit
 protocol UserCellViewModelDelegate: AnyObject {
     func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?)
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error)
-    func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel)
     func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel)
 }
 
@@ -119,7 +118,6 @@ class UserCellViewModel {
                 print("Followed user: \(user.displayName)")
             }
 
-            delegate?.userCellViewModelDidTapFollow(self)
             delegate?.userCellViewModelDidUpdateFollowState(self)
             followAction?()
         } catch {
