@@ -66,8 +66,6 @@ class UserListViewModel {
             let response = try jsonDecoder.decode(UsersResponse.self, from: data)
             users = response.items
 
-            print("Successfully decoded \(users.count) users")
-
         } catch let fetchError {
             print("Decoding error: \(fetchError)")
             if let decodingError = fetchError as? DecodingError {
