@@ -53,11 +53,6 @@
 			path = "pixel-stackoverflow-listTests";
 			sourceTree = "<group>";
 		};
-		D89616922E69FE9200092F86 /* pixel-stackoverflow-listUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "pixel-stackoverflow-listUITests";
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,7 +85,6 @@
 			children = (
 				D89616712E69FE9000092F86 /* pixel-stackoverflow-list */,
 				D89616882E69FE9200092F86 /* pixel-stackoverflow-listTests */,
-				D89616922E69FE9200092F86 /* pixel-stackoverflow-listUITests */,
 				D89616702E69FE9000092F86 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -165,9 +159,6 @@
 			);
 			dependencies = (
 				D89616912E69FE9200092F86 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				D89616922E69FE9200092F86 /* pixel-stackoverflow-listUITests */,
 			);
 			name = "pixel-stackoverflow-listUITests";
 			packageProductDependencies = (
