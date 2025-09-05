@@ -10,12 +10,15 @@ import UIKit
 protocol UserCellViewModelDelegate: AnyObject {
     func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?)
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error)
+    func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel)
 }
 
 class UserCellViewModel {
     // MARK: - Properties
     private let user: User
     private let imageLoader: ((URL) async throws -> UIImage)?
+    private let followAction: (() -> Void)?
+    private let followedUsersRepository: FollowedUsersRepositoryProtocol
     private var currentImageURL: URL?
 
     weak var delegate: UserCellViewModelDelegate?
@@ -37,10 +40,35 @@ class UserCellViewModel {
         user.profileImage
     }
 
+    var isFollowed: Bool {
+        get async {
+            do {
+                return try await followedUsersRepository.isUserFollowed(userID: user.userId)
+            } catch {
+                print("Error checking if user is followed: \(error)")
+                return false
+            }
+        }
+    }
+
+    var followButtonTitle: String {
+        get async {
+            await isFollowed ? "Following" : "Follow"
+        }
+    }
+
+    var followButtonImage: String? {
+        get async {
+            await isFollowed ? "checkmark.circle.fill" : nil
+        }
+    }
+
     // MARK: - Initialization
-    init(user: User, imageLoader: ((URL) async throws -> UIImage)?) {
+    init(user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil, followedUsersRepository: FollowedUsersRepositoryProtocol) {
         self.user = user
         self.imageLoader = imageLoader
+        self.followAction = followAction
+        self.followedUsersRepository = followedUsersRepository
     }
 
     // MARK: - Public Methods
@@ -76,5 +104,25 @@ class UserCellViewModel {
 
     func cancelImageLoading() {
         currentImageURL = nil
+    }
+
+    func followUser() async {
+        do {
+            let currentlyFollowed = try await followedUsersRepository.isUserFollowed(userID: user.userId)
+
+            if currentlyFollowed {
+                try await followedUsersRepository.unfollowUser(userID: user.userId)
+                print("Unfollowed user: \(user.displayName)")
+            } else {
+                try await followedUsersRepository.followUser(userID: user.userId)
+                print("Followed user: \(user.displayName)")
+            }
+        } catch {
+            print("Error following/unfollowing user: \(error)")
+        }
+
+        // Always notify delegate to update UI state, even on error
+        delegate?.userCellViewModelDidUpdateFollowState(self)
+        followAction?()
     }
 }

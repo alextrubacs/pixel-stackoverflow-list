@@ -9,12 +9,48 @@ import Testing
 import UIKit
 @testable import pixel_stackoverflow_list
 
+/// Mock implementation of FollowedUsersRepositoryProtocol for testing
+class MockFollowedUsersRepository: FollowedUsersRepositoryProtocol {
+    var mockFollowedUsers: Set<Int> = []
+    var shouldThrowError = false
+
+    func followUser(userID: Int) async throws {
+        if shouldThrowError {
+            throw NSError(domain: "TestError", code: -1, userInfo: nil)
+        }
+        mockFollowedUsers.insert(userID)
+    }
+
+    func unfollowUser(userID: Int) async throws {
+        if shouldThrowError {
+            throw NSError(domain: "TestError", code: -1, userInfo: nil)
+        }
+        mockFollowedUsers.remove(userID)
+    }
+
+    func isUserFollowed(userID: Int) async throws -> Bool {
+        if shouldThrowError {
+            throw NSError(domain: "TestError", code: -1, userInfo: nil)
+        }
+        return mockFollowedUsers.contains(userID)
+    }
+
+    func getAllFollowedUserIDs() async throws -> [Int] {
+        if shouldThrowError {
+            throw NSError(domain: "TestError", code: -1, userInfo: nil)
+        }
+        return Array(mockFollowedUsers)
+    }
+}
+
 /// Mock delegate for testing UserCellViewModel delegate callbacks
 class MockUserCellViewModelDelegate: UserCellViewModelDelegate {
     var didUpdateImageCalled = false
     var didFailWithErrorCalled = false
+    var didUpdateFollowStateCalled = false
     var lastUpdatedImage: UIImage?
     var lastError: Error?
+    var lastFollowViewModel: UserCellViewModel?
 
     func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?) {
         didUpdateImageCalled = true
@@ -24,6 +60,11 @@ class MockUserCellViewModelDelegate: UserCellViewModelDelegate {
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error) {
         didFailWithErrorCalled = true
         lastError = error
+    }
+
+    func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel) {
+        didUpdateFollowStateCalled = true
+        lastFollowViewModel = viewModel
     }
 }
 
@@ -57,11 +98,19 @@ struct UserCellViewModelTests {
         displayName: "Bob Wilson"
     )
 
+    private let mockRepository = MockFollowedUsersRepository()
+
+    // MARK: - Setup
+    private func resetMockRepository() {
+        mockRepository.mockFollowedUsers.removeAll()
+        mockRepository.shouldThrowError = false
+    }
+
     // MARK: - Computed Properties Tests
     @Test("Computed properties return correct values")
     func testComputedProperties() {
         // Given
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
 
         // Then
         #expect(viewModel.displayName == "John Doe")
@@ -73,7 +122,7 @@ struct UserCellViewModelTests {
     @Test("Location text handles nil location correctly")
     func testLocationTextWithNilLocation() {
         // Given
-        let viewModel = UserCellViewModel(user: testUserWithoutLocation, imageLoader: nil)
+        let viewModel = UserCellViewModel(user: testUserWithoutLocation, imageLoader: nil, followedUsersRepository: mockRepository)
 
         // Then
         #expect(viewModel.locationText == "Location not available")
@@ -82,7 +131,7 @@ struct UserCellViewModelTests {
     @Test("Profile image URL returns nil when user has no profile image")
     func testProfileImageURLWithNilImage() {
         // Given
-        let viewModel = UserCellViewModel(user: testUserWithoutImage, imageLoader: nil)
+        let viewModel = UserCellViewModel(user: testUserWithoutImage, imageLoader: nil, followedUsersRepository: mockRepository)
 
         // Then
         #expect(viewModel.profileImageURL == nil)
@@ -93,7 +142,7 @@ struct UserCellViewModelTests {
     func testLoadAvatarImageWithNoProfileImage() async {
         // Given
         let delegate = MockUserCellViewModelDelegate()
-        let viewModel = UserCellViewModel(user: testUserWithoutImage, imageLoader: nil)
+        let viewModel = UserCellViewModel(user: testUserWithoutImage, imageLoader: nil, followedUsersRepository: mockRepository)
         viewModel.delegate = delegate
 
         // When
@@ -114,7 +163,7 @@ struct UserCellViewModelTests {
         let imageLoader: ((URL) async throws -> UIImage)? = { _ in
             return expectedImage
         }
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader, followedUsersRepository: mockRepository)
         viewModel.delegate = delegate
 
         // When
@@ -135,7 +184,7 @@ struct UserCellViewModelTests {
         let imageLoader: ((URL) async throws -> UIImage)? = { _ in
             throw expectedError
         }
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader, followedUsersRepository: mockRepository)
         viewModel.delegate = delegate
 
         // When
@@ -158,7 +207,7 @@ struct UserCellViewModelTests {
             try await Task.sleep(nanoseconds: 200_000_000)
             return expectedImage
         }
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader, followedUsersRepository: mockRepository)
         viewModel.delegate = delegate
 
         // When
@@ -183,7 +232,7 @@ struct UserCellViewModelTests {
             return expectedImage
         }
 
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: imageLoader, followedUsersRepository: mockRepository)
         viewModel.delegate = delegate
 
         // When - Call loadAvatarImage multiple times
@@ -201,7 +250,7 @@ struct UserCellViewModelTests {
     @Test("Initialization with nil image loader")
     func testInitializationWithNilImageLoader() {
         // Given
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
 
         // Then
         #expect(viewModel.displayName == testUser.displayName)
@@ -214,7 +263,7 @@ struct UserCellViewModelTests {
     func testDelegateWeakReference() {
         // Given
         var delegate: MockUserCellViewModelDelegate? = MockUserCellViewModelDelegate()
-        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil)
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
         viewModel.delegate = delegate
 
         // When
@@ -222,5 +271,100 @@ struct UserCellViewModelTests {
 
         // Then
         // ViewModel should still exist (no assertion needed for non-optional)
+    }
+
+    // MARK: - Follow Functionality Tests
+
+    @Test("Follow user calls repository and updates delegate")
+    func testFollowUser() async throws {
+        // Given
+        resetMockRepository()
+        let delegate = MockUserCellViewModelDelegate()
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
+        viewModel.delegate = delegate
+
+        // When
+        await viewModel.followUser()
+
+        // Then
+        #expect(delegate.didUpdateFollowStateCalled)
+        #expect(mockRepository.mockFollowedUsers.contains(testUser.userId))
+    }
+
+    @Test("Unfollow user calls repository and updates delegate")
+    func testUnfollowUser() async throws {
+        // Given
+        resetMockRepository()
+        let delegate = MockUserCellViewModelDelegate()
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
+        viewModel.delegate = delegate
+
+        // First follow the user
+        await viewModel.followUser()
+        #expect(mockRepository.mockFollowedUsers.contains(testUser.userId))
+
+        // When - unfollow
+        await viewModel.followUser() // Second call should unfollow
+
+        // Then
+        #expect(delegate.didUpdateFollowStateCalled)
+        #expect(!mockRepository.mockFollowedUsers.contains(testUser.userId))
+    }
+
+    @Test("Follow user handles repository errors gracefully")
+    func testFollowUserWithRepositoryError() async throws {
+        // Given
+        resetMockRepository()
+        let delegate = MockUserCellViewModelDelegate()
+        mockRepository.shouldThrowError = true
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
+        viewModel.delegate = delegate
+
+        // When
+        await viewModel.followUser()
+
+        // Then
+        #expect(delegate.didUpdateFollowStateCalled) // Delegate should still be called
+        #expect(!mockRepository.mockFollowedUsers.contains(testUser.userId)) // User should not be followed
+    }
+
+    @Test("Follow button title shows correct state")
+    func testFollowButtonTitle() async {
+        // Given
+        resetMockRepository()
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
+
+        // When - initially not followed
+        let initialTitle = await viewModel.followButtonTitle
+
+        // Then
+        #expect(initialTitle == "Follow")
+
+        // When - follow the user
+        await viewModel.followUser()
+        let followedTitle = await viewModel.followButtonTitle
+
+        // Then
+        #expect(followedTitle == "Following")
+    }
+
+    @Test("Follow button image shows correct state")
+    func testFollowButtonImage() async {
+        // Given
+        resetMockRepository()
+        let viewModel = UserCellViewModel(user: testUser, imageLoader: nil, followedUsersRepository: mockRepository)
+
+        // When - initially not followed
+        let initialImage = await viewModel.followButtonImage
+
+        // Then
+        #expect(initialImage == nil)
+
+        // When - follow the user
+        await viewModel.followUser()
+        let followedImage = await viewModel.followButtonImage
+
+        // Then
+        #expect(followedImage == "checkmark.circle.fill")
     }
 }

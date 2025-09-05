@@ -90,7 +90,11 @@ private extension MainListViewController {
                 return try await self?.viewModel.downloadAndCacheImage(from: url) ?? UIImage()
             }
 
-            cell.configure(with: user, imageLoader: imageLoader)
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                return UITableViewCell()
+            }
+
+            cell.configure(with: user, imageLoader: imageLoader, followedUsersRepository: appDelegate.followedUsersRepository)
 
             return cell
         }

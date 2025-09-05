@@ -6,9 +6,24 @@
 //
 
 import UIKit
+import SwiftData
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    // MARK: - Properties
+    lazy var modelContainer: ModelContainer = {
+        do {
+            let container = try ModelContainer(for: FollowedUser.self)
+            return container
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }()
+
+    lazy var followedUsersRepository: FollowedUsersRepositoryProtocol = {
+        FollowedUsersRepository(modelContainer: modelContainer)
+    }()
 
 
 
