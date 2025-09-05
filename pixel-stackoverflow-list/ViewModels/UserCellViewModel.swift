@@ -10,12 +10,14 @@ import UIKit
 protocol UserCellViewModelDelegate: AnyObject {
     func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?)
     func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error)
+    func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel)
 }
 
 class UserCellViewModel {
     // MARK: - Properties
     private let user: User
     private let imageLoader: ((URL) async throws -> UIImage)?
+    private let followAction: (() -> Void)?
     private var currentImageURL: URL?
 
     weak var delegate: UserCellViewModelDelegate?
@@ -38,9 +40,10 @@ class UserCellViewModel {
     }
 
     // MARK: - Initialization
-    init(user: User, imageLoader: ((URL) async throws -> UIImage)?) {
+    init(user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil) {
         self.user = user
         self.imageLoader = imageLoader
+        self.followAction = followAction
     }
 
     // MARK: - Public Methods
@@ -76,5 +79,11 @@ class UserCellViewModel {
 
     func cancelImageLoading() {
         currentImageURL = nil
+    }
+
+    func followUser() {
+        print("Follow action executed for user: \(user.displayName)")
+        delegate?.userCellViewModelDidTapFollow(self)
+        followAction?()
     }
 }
