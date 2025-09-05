@@ -193,7 +193,7 @@ private extension MainListViewController {
     }
 
     func updateEmptyState() {
-        guard let stackView = emptyStateView.viewWithTag(1000) as? UIStackView,
+        guard let _ = emptyStateView.viewWithTag(1000) as? UIStackView,
               let loadingIndicator = emptyStateView.viewWithTag(1001) as? UIActivityIndicatorView,
               let imageView = emptyStateView.viewWithTag(1002) as? UIImageView,
               let titleLabel = emptyStateView.viewWithTag(1003) as? UILabel,
