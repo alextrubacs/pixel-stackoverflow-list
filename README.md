@@ -20,6 +20,10 @@ pixel-stackoverflow-list/
     ├── UserCellViewModelTests.swift
     └── UserListViewModelTests.swift
 ```
+<img width="300" height="653" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-05 at 17 48 06" src="https://github.com/user-attachments/assets/aac90484-e05f-4496-aa55-0fe39ac48f63" />
+<img width="300" height="653" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-05 at 17 48 02" src="https://github.com/user-attachments/assets/e4c19a14-07a5-4a75-8e21-94c31f314dff" />
+<img width="300" height="653" alt="Simulator Screenshot - iPhone 16 Pro - 2025-09-05 at 17 47 48" src="https://github.com/user-attachments/assets/7acc3c25-3875-4494-ac05-551e4429c04e" />
+
 
 ## 🛠️ Technical Decisions
 
