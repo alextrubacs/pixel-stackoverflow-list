@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Codable {
+struct User: Codable, Hashable {
     let accountId: Int?
     let reputation: Int
     let userId: Int
