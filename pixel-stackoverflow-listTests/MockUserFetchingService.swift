@@ -9,7 +9,7 @@ import Foundation
 @testable import pixel_stackoverflow_list
 
 /// Mock implementation of UserFetchingProtocol for testing
-final class MockUserFetchingService: UserFetchingProtocol {
+final class MockUserFetchingService: @unchecked Sendable, UserFetchingProtocol {
     var mockUsers: [User] = []
     var mockError: Error?
     var fetchUsersCalled = false
