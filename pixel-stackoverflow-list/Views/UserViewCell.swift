@@ -7,14 +7,11 @@
 
 import UIKit
 
-class UserViewCell: UITableViewCell {
+class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
     static var reuseIdentifier: String { CellIdentifier.userViewCell.rawValue }
 
     // MARK: - Dependencies
-    var imageLoader: ((URL) async throws -> UIImage)?
-
-    // MARK: - State
-    private var currentImageURL: URL?
+    private var viewModel: UserCellViewModel?
 
     // MARK: - Subviews
     private let avatarImageView: UIImageView = {
@@ -115,57 +112,43 @@ class UserViewCell: UITableViewCell {
         displayNameLabel.text = nil
         reputationLabel.text = nil
         locationLabel.text = nil
-        currentImageURL = nil
+        viewModel?.cancelImageLoading()
+        viewModel?.delegate = nil
+        viewModel = nil
     }
 
     // MARK: - Configuration
-    func configure(with user: User) {
-        displayNameLabel.text = user.displayName
-        reputationLabel.text = "Reputation: \(user.reputation)"
-        locationLabel.text = user.location ?? "Location not available"
+    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?) {
+        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader)
+        viewModel?.delegate = self
 
-        loadAvatarImage(for: user)
-    }
+        displayNameLabel.text = viewModel?.displayName
+        reputationLabel.text = viewModel?.reputationText
+        locationLabel.text = viewModel?.locationText
 
-    private func loadAvatarImage(for user: User) {
-        guard let imageURL = user.profileImage else {
+        if viewModel?.profileImageURL != nil {
+            avatarImageView.image = nil
+            avatarImageView.backgroundColor = .systemBlue
+            viewModel?.loadAvatarImage()
+        } else {
             avatarImageView.image = nil
             avatarImageView.backgroundColor = .secondarySystemFill
-            currentImageURL = nil
-            return
         }
+    }
 
-        currentImageURL = imageURL
+    // MARK: - UserCellViewModelDelegate
+    func userCellViewModel(_ viewModel: UserCellViewModel, didUpdateImage image: UIImage?) {
+        if let image = image {
+            avatarImageView.image = image
+            avatarImageView.backgroundColor = .clear
+        } else {
+            avatarImageView.image = nil
+            avatarImageView.backgroundColor = .secondarySystemFill
+        }
+    }
 
+    func userCellViewModel(_ viewModel: UserCellViewModel, didFailWithError error: Error) {
         avatarImageView.image = nil
-        avatarImageView.backgroundColor = .systemBlue
-
-        Task { [weak self] in
-            guard let self = self else { return }
-
-            do {
-                guard self.currentImageURL == imageURL else { return }
-
-                let image = try await self.imageLoader?(imageURL)
-
-                await MainActor.run {
-                    guard self.currentImageURL == imageURL else { return }
-
-                    if let image = image {
-                        self.avatarImageView.image = image
-                        self.avatarImageView.backgroundColor = .clear
-                    } else {
-                        self.avatarImageView.image = nil
-                        self.avatarImageView.backgroundColor = .secondarySystemFill
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    guard self.currentImageURL == imageURL else { return }
-                    self.avatarImageView.image = nil
-                    self.avatarImageView.backgroundColor = .secondarySystemFill
-                }
-            }
-        }
+        avatarImageView.backgroundColor = .secondarySystemFill
     }
 }
