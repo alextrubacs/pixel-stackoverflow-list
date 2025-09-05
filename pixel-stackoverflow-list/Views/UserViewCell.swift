@@ -58,15 +58,11 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
 
-        var config = UIButton.Configuration.plain()
+        var config = UIButton.Configuration.tinted()
         config.title = "Follow"
-        config.baseForegroundColor = .systemBlue
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         button.configuration = config
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemBlue.cgColor
-        button.layer.cornerRadius = 12
 
         return button
     }()
