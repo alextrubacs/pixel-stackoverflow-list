@@ -14,13 +14,4 @@ struct User: Codable {
     let location: String?
     let profileImage: URL?
     let displayName: String
-
-    enum CodingKeys: String, CodingKey {
-        case accountId = "account_id"
-        case reputation
-        case userId = "user_id"
-        case location
-        case profileImage = "profile_image"
-        case displayName = "display_name"
-    }
 }
