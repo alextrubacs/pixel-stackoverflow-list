@@ -300,11 +300,11 @@ struct UserCellViewModelTests {
         viewModel.delegate = delegate
 
         // First follow the user
-        try await viewModel.followUser()
+        await viewModel.followUser()
         #expect(mockRepository.mockFollowedUsers.contains(testUser.userId))
 
         // When - unfollow
-        try await viewModel.followUser() // Second call should unfollow
+        await viewModel.followUser() // Second call should unfollow
 
         // Then
         #expect(delegate.didUpdateFollowStateCalled)
@@ -341,7 +341,7 @@ struct UserCellViewModelTests {
         #expect(initialTitle == "Follow")
 
         // When - follow the user
-        try? await viewModel.followUser()
+        await viewModel.followUser()
         let followedTitle = await viewModel.followButtonTitle
 
         // Then
@@ -361,7 +361,7 @@ struct UserCellViewModelTests {
         #expect(initialImage == nil)
 
         // When - follow the user
-        try? await viewModel.followUser()
+        await viewModel.followUser()
         let followedImage = await viewModel.followButtonImage
 
         // Then
