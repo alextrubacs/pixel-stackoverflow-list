@@ -20,7 +20,6 @@ final class FollowedUsersRepository: FollowedUsersRepositoryProtocol {
     func followUser(userID: Int) async throws {
         let followedUser = FollowedUser()
         followedUser.userID = userID
-        followedUser.followedAt = Date()
         modelContext.insert(followedUser)
         try modelContext.save()
     }
