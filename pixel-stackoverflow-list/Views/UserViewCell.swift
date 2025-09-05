@@ -10,6 +10,12 @@ import UIKit
 class UserViewCell: UITableViewCell {
     static var reuseIdentifier: String { CellIdentifier.userViewCell.rawValue }
 
+    // MARK: - Dependencies
+    var imageLoader: ((URL) async throws -> UIImage)?
+
+    // MARK: - State
+    private var currentImageURL: URL?
+
     // MARK: - Subviews
     private let avatarImageView: UIImageView = {
         let imageView = UIImageView()
@@ -109,6 +115,7 @@ class UserViewCell: UITableViewCell {
         displayNameLabel.text = nil
         reputationLabel.text = nil
         locationLabel.text = nil
+        currentImageURL = nil
     }
 
     // MARK: - Configuration
@@ -117,12 +124,48 @@ class UserViewCell: UITableViewCell {
         reputationLabel.text = "Reputation: \(user.reputation)"
         locationLabel.text = user.location ?? "Location not available"
 
-        // Load avatar image if available
-        if user.profileImage != nil {
-            // TODO: Load the profile image
-            avatarImageView.backgroundColor = .systemBlue
-        } else {
+        loadAvatarImage(for: user)
+    }
+
+    private func loadAvatarImage(for user: User) {
+        guard let imageURL = user.profileImage else {
+            avatarImageView.image = nil
             avatarImageView.backgroundColor = .secondarySystemFill
+            currentImageURL = nil
+            return
+        }
+
+        currentImageURL = imageURL
+
+        avatarImageView.image = nil
+        avatarImageView.backgroundColor = .systemBlue
+
+        Task { [weak self] in
+            guard let self = self else { return }
+
+            do {
+                guard self.currentImageURL == imageURL else { return }
+
+                let image = try await self.imageLoader?(imageURL)
+
+                await MainActor.run {
+                    guard self.currentImageURL == imageURL else { return }
+
+                    if let image = image {
+                        self.avatarImageView.image = image
+                        self.avatarImageView.backgroundColor = .clear
+                    } else {
+                        self.avatarImageView.image = nil
+                        self.avatarImageView.backgroundColor = .secondarySystemFill
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    guard self.currentImageURL == imageURL else { return }
+                    self.avatarImageView.image = nil
+                    self.avatarImageView.backgroundColor = .secondarySystemFill
+                }
+            }
         }
     }
 }
