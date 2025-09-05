@@ -85,11 +85,12 @@ private extension MainListViewController {
             ) as? UserViewCell else {
                 return UITableViewCell()
             }
-            
-            cell.imageLoader = { [weak self] url in
+
+            let imageLoader: ((URL) async throws -> UIImage)? = { [weak self] url in
                 return try await self?.viewModel.downloadAndCacheImage(from: url) ?? UIImage()
             }
-            cell.configure(with: user)
+
+            cell.configure(with: user, imageLoader: imageLoader)
 
             return cell
         }
