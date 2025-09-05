@@ -57,12 +57,21 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
     private let followButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.isSymbolAnimationEnabled = true
 
         var config = UIButton.Configuration.tinted()
         config.title = "Follow"
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        config.imagePlacement = .trailing
+        config.imagePadding = 4
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = .preferredFont(forTextStyle: .caption1)
+            return outgoing
+        }
 
         button.configuration = config
+        button.layer.cornerRadius = 8
 
         return button
     }()
@@ -118,7 +127,8 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
             // Follow button
             followButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             followButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            followButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 80)
+            followButton.heightAnchor.constraint(equalToConstant: 32),
+            followButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 70)
         ])
     }
 
@@ -143,14 +153,48 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
         viewModel?.followUser()
     }
 
+    // MARK: - Private Methods
+    private func updateFollowButton() {
+        guard let viewModel = viewModel else { return }
+
+        var config: UIButton.Configuration
+
+        if viewModel.isFollowed {
+            config = UIButton.Configuration.filled()
+            config.title = viewModel.followButtonTitle
+            if let imageName = viewModel.followButtonImage {
+                let symbolConfig = UIImage.SymbolConfiguration(font: .preferredFont(forTextStyle: .caption1))
+                config.image = UIImage(systemName: imageName, withConfiguration: symbolConfig)
+            }
+        } else {
+            config = UIButton.Configuration.tinted()
+            config.title = viewModel.followButtonTitle
+            config.image = nil
+        }
+
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        config.imagePlacement = .trailing
+        config.imagePadding = 4
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = .preferredFont(forTextStyle: .caption1)
+            return outgoing
+        }
+
+        followButton.configuration = config
+        followButton.layer.cornerRadius = 8
+    }
+
     // MARK: - Configuration
-    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?, followAction: (() -> Void)? = nil) {
-        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader, followAction: followAction)
+    func configure(with user: User, imageLoader: ((URL) async throws -> UIImage)?) {
+        viewModel = UserCellViewModel(user: user, imageLoader: imageLoader)
         viewModel?.delegate = self
 
         displayNameLabel.text = viewModel?.displayName
         reputationLabel.text = viewModel?.reputationText
         locationLabel.text = viewModel?.locationText
+
+        updateFollowButton()
 
         if viewModel?.profileImageURL != nil {
             avatarImageView.image = nil
@@ -180,5 +224,9 @@ class UserViewCell: UITableViewCell, UserCellViewModelDelegate {
 
     func userCellViewModelDidTapFollow(_ viewModel: UserCellViewModel) {
         // Follow action is handled in the ViewModel
+    }
+
+    func userCellViewModelDidUpdateFollowState(_ viewModel: UserCellViewModel) {
+        updateFollowButton()
     }
 }
