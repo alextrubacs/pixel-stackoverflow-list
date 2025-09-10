@@ -126,6 +126,7 @@ private extension MainListViewController {
         view.backgroundColor = .systemBackground
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
+        tableView.delegate = self
 
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -204,7 +205,7 @@ private extension MainListViewController {
         snapshot.appendSections(["users"])
         snapshot.appendItems(users, toSection: "users")
 
-        dataSource?.apply(snapshot, animatingDifferences: false)
+        dataSource?.apply(snapshot, animatingDifferences: true)
 
         // Clear any previous error when users are successfully loaded
         currentError = nil
@@ -298,6 +299,27 @@ private extension MainListViewController {
     @objc func onPullRefresh() {
         self.tableView.refreshControl?.endRefreshing()
         loadUsers()
+    }
+}
+
+extension MainListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deletionAction = UIContextualAction(style: .destructive, title: "Delete") { (_, _, completionHandler) in
+            self.deleteItem(at: indexPath)
+            completionHandler(true)
+        }
+        deletionAction.image = UIImage(systemName: "trash")
+        deletionAction.backgroundColor = .systemRed
+        let configuration = UISwipeActionsConfiguration(actions: [deletionAction])
+        return configuration
+    }
+
+    private func deleteItem(at indexPath: IndexPath) {
+        guard let dataSource = dataSource else { return }
+        guard let itemToDelete = dataSource.itemIdentifier(for: indexPath) else { return }
+        var snapshot = dataSource.snapshot()
+        snapshot.deleteItems([itemToDelete])
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
 
