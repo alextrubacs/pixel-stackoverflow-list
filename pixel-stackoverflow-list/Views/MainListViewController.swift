@@ -116,6 +116,7 @@ final class MainListViewController: UIViewController {
         setup()
         createDataSource()
         setupViewModel()
+        configureRefreshControl()
         loadUsers()
     }
 }
@@ -159,7 +160,12 @@ private extension MainListViewController {
         }
     }
 
-    func loadUsers() {
+    private func configureRefreshControl() {
+        tableView.refreshControl = UIRefreshControl()
+        tableView.refreshControl?.addTarget(self, action: #selector(onPullRefresh), for: .valueChanged)
+    }
+
+    private func loadUsers() {
         viewModel.getUsers()
     }
 }
@@ -286,6 +292,11 @@ private extension MainListViewController {
     @objc private func retryButtonTapped() {
         // Clear the current error and retry loading users
         currentError = nil
+        loadUsers()
+    }
+
+    @objc func onPullRefresh() {
+        self.tableView.refreshControl?.endRefreshing()
         loadUsers()
     }
 }
