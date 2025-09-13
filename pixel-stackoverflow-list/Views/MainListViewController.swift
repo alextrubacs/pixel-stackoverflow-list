@@ -117,6 +117,7 @@ final class MainListViewController: UIViewController {
         createDataSource()
         setupViewModel()
         loadUsers()
+        tableView.delegate = self
     }
 }
 
@@ -287,6 +288,12 @@ private extension MainListViewController {
         // Clear the current error and retry loading users
         currentError = nil
         loadUsers()
+    }
+}
+
+extension MainListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.navigationController?.pushViewController(UserDetailViewController(user: viewModel.allUsers[indexPath.item]), animated: true)
     }
 }
 
